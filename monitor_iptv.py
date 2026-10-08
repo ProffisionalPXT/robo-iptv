@@ -4,6 +4,7 @@ import time
 import re
 import sys
 from datetime import datetime
+import requests
 
 # Garante suporte a UTF-8 no console do Windows
 if sys.platform == "win32":
@@ -184,7 +185,6 @@ def extrair_clientes_completos(page) -> list:
                 const colSituacao = tds[2].innerText.trim();
                 const colDetalhes = tds[3].innerText.trim();
 
-                // Ignora MAXPLAYER
                 if (colUsuario.toUpperCase().includes('MAXPLAYER')) return;
                 if (!colUsuario.toUpperCase().includes('P2PLAYER') && !colUsuario.toUpperCase().includes('CASSIO')) return;
 
@@ -195,7 +195,6 @@ def extrair_clientes_completos(page) -> list:
                 const dataMatch = colDatas.match(/\\d{2}\\/\\d{2}\\/\\d{4}(?:,\\s*\\d{2}:\\d{2}:\\d{2})?/);
                 const vencimento = dataMatch ? dataMatch[0] : '';
 
-                // Link de edição do lápis
                 const aEdit = r.querySelector('a[href*="#/customers/edit/"]');
                 const editHref = aEdit ? aEdit.getAttribute('href') : '';
 
@@ -233,7 +232,7 @@ def extrair_clientes_completos(page) -> list:
 
     print(f"[EXTRACAO] Encontrados {len(clientes_base)} clientes. Coletando senhas...")
 
-    # 2. Para cada cliente, visita a tela de edição para obter a senha
+    # 2. Visita telas de edição para pegar a senha
     for i, c in enumerate(clientes_base, start=1):
         href = c.get("editHref")
         if href:
@@ -242,13 +241,9 @@ def extrair_clientes_completos(page) -> list:
                 page.goto(url_edit, wait_until="load", timeout=15000)
                 page.wait_for_timeout(1500)
 
-                # Busca campo de senha
                 senha_val = page.evaluate("""() => {
-                    // O input de senha tem placeholder 'Deixe em branco para mater o mesmo'
                     const inp = document.querySelector("input[placeholder*='Deixe em branco'], input[placeholder*='mesmo']");
                     if (inp && inp.value) return inp.value;
-                    
-                    // Fallback: pega o segundo input de texto dentro do form de dados de acesso
                     const inputs = Array.from(document.querySelectorAll("input[type='text']"));
                     for (let j = 0; j < inputs.length; j++) {
                         if (inputs[j].placeholder && inputs[j].placeholder.includes('Deixe em branco')) {
@@ -266,13 +261,30 @@ def extrair_clientes_completos(page) -> list:
             except Exception as e:
                 print(f"  [{i}/{len(clientes_base)}] Erro ao obter senha de {c['nome']}: {e}")
 
-        # Remove chave temporária
         c.pop("editHref", None)
 
     return clientes_base
 
+def sincronizar_com_nuvem(clientes: list):
+    """Envia a base de clientes extraída para a nuvem no Render."""
+    config = carregar_config()
+    url_nuvem = config.get("url_nuvem", "").strip()
+    if not url_nuvem:
+        return
+
+    endpoint = f"{url_nuvem.rstrip('/')}/sync"
+    try:
+        print(f"[SYNC] Enviando dados para a nuvem: {endpoint}...")
+        resp = requests.post(endpoint, json=clientes, timeout=15)
+        if resp.status_code == 200:
+            print(f"[SYNC SUCESSO] Nuvem atualizada com {len(clientes)} clientes!")
+        else:
+            print(f"[SYNC AVISO] Servidor retornou status {resp.status_code}")
+    except Exception as e:
+        print(f"[SYNC ERRO] Falha ao conectar na nuvem: {e}")
+
 def executar_monitor(silencioso: bool = True) -> list:
-    """Executa o processo de consulta do painel com coleta completa de senhas."""
+    """Executa o processo de consulta do painel com coleta completa de senhas e sync na nuvem."""
     config = carregar_config()
     url_painel = config.get("url_painel", "https://painel.p2player.top")
     credenciais = config.get("credenciais", {})
@@ -324,12 +336,16 @@ def executar_monitor(silencioso: bool = True) -> list:
 
         # Extrai clientes completos incluindo senhas
         clientes_extraidos = extrair_clientes_completos(page)
-        print(f"[SUCESSO] Total de clientes sincronizados: {len(clientes_extraidos)}")
+        print(f"[SUCESSO] Total de clientes sincronizados localmente: {len(clientes_extraidos)}")
 
         with open(CLIENTES_JSON, "w", encoding="utf-8") as f:
             json.dump(clientes_extraidos, f, ensure_ascii=False, indent=2)
 
         browser.close()
+
+    # Envia para o Render na nuvem
+    if clientes_extraidos:
+        sincronizar_com_nuvem(clientes_extraidos)
 
     return clientes_extraidos
 
