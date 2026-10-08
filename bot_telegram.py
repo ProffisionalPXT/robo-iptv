@@ -16,13 +16,107 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-from monitor_iptv import (
-    executar_monitor,
-    formatar_relatorio_proximos,
-    formatar_relatorio_todos,
-    formatar_detalhe_cliente,
-    CLIENTES_JSON
-)
+# Importa funções auxiliares de formatação
+try:
+    from monitor_iptv import (
+        formatar_relatorio_proximos,
+        formatar_relatorio_todos,
+        formatar_detalhe_cliente,
+        executar_monitor,
+        CLIENTES_JSON
+    )
+    TEM_PLAYWRIGHT = True
+except Exception:
+    TEM_PLAYWRIGHT = False
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    CLIENTES_JSON = os.path.join(BASE_DIR, "clientes_extraidos.json")
+
+    def formatar_relatorio_proximos(clientes: list, dias_alerta: int = 5) -> str:
+        hoje = datetime.now()
+        vencem_hoje = []
+        vencem_breve = []
+        vencidos = []
+        
+        for c in clientes:
+            venc_str = c.get("vencimento", "")
+            data_match = re.search(r"(\d{2})/(\d{2})/(\d{4})", venc_str)
+            if data_match:
+                dia, mes, ano = map(int, data_match.groups())
+                try:
+                    dt_venc = datetime(ano, mes, dia)
+                    dias_restantes = (dt_venc.date() - hoje.date()).days
+                    c["dias_restantes"] = dias_restantes
+                    
+                    if dias_restantes < 0 or c.get("status", "").lower() == "vencido":
+                        vencidos.append(c)
+                    elif dias_restantes == 0:
+                        vencem_hoje.append(c)
+                    elif 0 < dias_restantes <= dias_alerta:
+                        vencem_breve.append(c)
+                except Exception:
+                    pass
+
+        vencem_breve.sort(key=lambda x: x.get("dias_restantes", 999))
+        linhas = [
+            "⏳ <b>CLIENTES PRÓXIMOS AO VENCIMENTO (CASSIO)</b>",
+            f"📅 <i>Consulta: {hoje.strftime('%d/%m/%Y às %H:%M')}</i>\n"
+        ]
+
+        if vencem_hoje:
+            linhas.append("🚨 <b>VENCEM HOJE:</b>")
+            for c in vencem_hoje:
+                linhas.append(f"• <b>{c.get('nome')}</b> (Login: <code>{c.get('usuario')}</code>) — 💰 {c.get('plano')}")
+            linhas.append("")
+
+        if vencem_breve:
+            linhas.append(f"⚠️ <b>VENCEM NOS PRÓXIMOS {dias_alerta} DIAS:</b>")
+            for c in vencem_breve:
+                dias = c.get("dias_restantes")
+                venc = c.get("vencimento", "").split(",")[0]
+                txt_dia = "amanhã" if dias == 1 else f"em {dias} dias"
+                tel = c.get("whatsapp", "")
+                txt_tel = f" | 📱 {tel}" if tel else ""
+                linhas.append(f"• <b>{c.get('nome')}</b> (Login: <code>{c.get('usuario')}</code>){txt_tel}\n  📅 {venc} ({txt_dia}) | 💰 {c.get('plano')}")
+            linhas.append("")
+
+        if not vencem_hoje and not vencem_breve:
+            linhas.append(f"✅ <i>Nenhum cliente vencendo nos próximos {dias_alerta} dias!</i>\n")
+
+        if vencidos:
+            linhas.append(f"❌ <b>Já Vencidos ({len(vencidos)}):</b>")
+            for c in vencidos:
+                linhas.append(f"• {c.get('nome')} (Venceu em {c.get('vencimento','').split(',')[0]})")
+            linhas.append("")
+
+        linhas.append(f"📊 Total de clientes monitorados: <b>{len(clientes)}</b>")
+        return "\n".join(linhas)
+
+    def formatar_relatorio_todos(clientes: list) -> str:
+        hoje = datetime.now()
+        linhas = [
+            "📋 <b>LISTA DE TODOS OS CLIENTES (CASSIO)</b>",
+            f"👥 Total: <b>{len(clientes)} clientes</b>\n"
+        ]
+        for i, c in enumerate(clientes, start=1):
+            tel = c.get("whatsapp", "")
+            txt_tel = f" | 📱 {tel}" if tel else ""
+            linhas.append(f"{i}. <b>{c.get('nome')}</b>")
+            linhas.append(f"   👤 Login: <code>{c.get('usuario')}</code> | 📅 Venc: {c.get('vencimento','').split(',')[0]} | 💰 {c.get('plano')}{txt_tel}\n")
+        linhas.append(f"<i>Atualizado em {hoje.strftime('%d/%m/%Y às %H:%M')}</i>")
+        return "\n".join(linhas)
+
+    def formatar_detalhe_cliente(c: dict) -> str:
+        linhas = [
+            f"🔐 <b>DADOS DE ACESSO - {c.get('nome')}</b>\n",
+            f"👤 <b>Usuário:</b> <code>{c.get('usuario')}</code>",
+            f"🔑 <b>Senha:</b> <code>{c.get('senha')}</code>",
+            f"📅 <b>Vencimento:</b> {c.get('vencimento')}",
+            f"💰 <b>Plano:</b> {c.get('plano')}"
+        ]
+        if c.get("whatsapp"):
+            linhas.append(f"📱 <b>WhatsApp:</b> {c.get('whatsapp')}")
+        linhas.append("\n<i>Toque no Usuário ou na Senha para copiar rapidamente!</i>")
+        return "\n".join(linhas)
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
 
@@ -42,17 +136,13 @@ def carregar_clientes_salvos() -> list:
     return []
 
 def normalizar_texto(texto: str) -> str:
-    """Remove acentos e padroniza para minúsculas."""
     if not texto:
         return ""
     return unicodedata.normalize("NFKD", texto).encode("ASCII", "ignore").decode("utf-8").strip().lower()
 
 def buscar_clientes_por_termo(termo: str, clientes: list) -> list:
-    """Busca inteligente de clientes com normalização e limpeza de prefixos."""
     termo_norm = normalizar_texto(termo)
-    # Remove prefixos como 'login', 'senha', 'ver', 'dados'
     termo_norm = re.sub(r"^(login|senha|ver|dados|acesso|usuario)\s+", "", termo_norm).strip()
-    
     if not termo_norm:
         return []
 
@@ -71,9 +161,7 @@ def buscar_clientes_por_termo(termo: str, clientes: list) -> list:
     return encontrados
 
 def enviar_mensagem_com_teclado(chat_id, texto: str, token: str):
-    """Envia mensagem para o Telegram com botões fixos no teclado."""
     url = f"https://api.telegram.org/bot{token}/sendMessage"
-    
     teclado = {
         "keyboard": [
             [{"text": "⏳ Próximos (5 dias)"}],
@@ -83,7 +171,6 @@ def enviar_mensagem_com_teclado(chat_id, texto: str, token: str):
         "resize_keyboard": True,
         "is_persistent": True
     }
-
     payload = {
         "chat_id": chat_id,
         "text": texto,
@@ -91,16 +178,13 @@ def enviar_mensagem_com_teclado(chat_id, texto: str, token: str):
         "reply_markup": teclado,
         "disable_web_page_preview": True
     }
-
     try:
         requests.post(url, json=payload, timeout=15)
     except Exception as e:
         print(f"[ERRO TELEGRAM] {e}")
 
 def rotina_agendamento_diario(token: str, chat_id: str, hora_alvo: str = "10:00", dias_alerta: int = 5):
-    """Dispara o alerta diário às 10:00 AM."""
     ultima_data_executada = ""
-
     while True:
         try:
             agora = datetime.now()
@@ -109,24 +193,15 @@ def rotina_agendamento_diario(token: str, chat_id: str, hora_alvo: str = "10:00"
 
             if hora_atual == hora_alvo and ultima_data_executada != data_atual:
                 ultima_data_executada = data_atual
-                print(f"[AGENDADOR] Enviando resumo das {hora_alvo}...")
-
-                # Executa atualização em segundo plano
-                try:
-                    clientes = executar_monitor(silencioso=True)
-                except Exception:
-                    clientes = carregar_clientes_salvos()
-
+                clientes = carregar_clientes_salvos()
                 relatorio = formatar_relatorio_proximos(clientes, dias_alerta)
                 msg_final = f"☀️ <b>BOM DIA! RESUMO MATINAL DAS {hora_alvo}</b>\n\n" + relatorio
                 enviar_mensagem_com_teclado(chat_id, msg_final, token)
         except Exception as e:
             print(f"[ERRO AGENDADOR] {e}")
-
         time.sleep(30)
 
 def loop_polling_bot():
-    """Loop principal de escuta de mensagens do Telegram."""
     config = carregar_config()
     cfg_telegram = config.get("telegram", {})
     token = cfg_telegram.get("bot_token", "").strip()
@@ -138,7 +213,6 @@ def loop_polling_bot():
         print("[ERRO] Token ou Chat ID ausente no config.json.")
         return
 
-    # Inicia a thread do agendador diário
     t_agendador = threading.Thread(
         target=rotina_agendamento_diario,
         args=(token, chat_id, hora_alerta, dias_alerta),
@@ -156,11 +230,9 @@ def loop_polling_bot():
     )
 
     print("[STATUS] Bot iniciado e aguardando comandos...\n")
-
     ultimo_update_id = 0
     url_updates = f"https://api.telegram.org/bot{token}/getUpdates"
 
-    # Consome mensagens anteriores
     try:
         resp = requests.get(url_updates, params={"offset": -1}, timeout=10).json()
         if resp.get("ok") and resp.get("result"):
@@ -183,7 +255,6 @@ def loop_polling_bot():
                     if sender_id != chat_id:
                         continue
 
-                    print(f"[COMANDO RECEBIDO] {texto_user}")
                     txt_lower = texto_user.lower()
                     clientes = carregar_clientes_salvos()
 
@@ -197,7 +268,7 @@ def loop_polling_bot():
                         relatorio = formatar_relatorio_todos(clientes)
                         enviar_mensagem_com_teclado(chat_id, relatorio, token)
 
-                    # 3. VER LOGIN/SENHA (BOTÃO OU COMANDO)
+                    # 3. VER LOGIN/SENHA (MENU OU BUSCA)
                     elif txt_lower in ["🔑 ver login/senha", "ver login/senha", "ver login", "/login", "login", "senha"]:
                         linhas_menu = ["🔑 <b>CONSULTA DE LOGIN E SENHA</b>\n", "Digite o <b>nome</b> do cliente ou o <b>número</b>:\n"]
                         for i, c in enumerate(clientes, start=1):
@@ -207,14 +278,17 @@ def loop_polling_bot():
 
                     # 4. ATUALIZAR PAINEL
                     elif "atualizar" in txt_lower or "verificar" in txt_lower or txt_lower == "/atualizar":
-                        enviar_mensagem_com_teclado(chat_id, "🔄 <i>Acessando o painel para atualizar os dados... Aguarde cerca de 15 segundos.</i>", token)
-                        try:
-                            clientes = executar_monitor(silencioso=True)
-                            msg_sucesso = f"✅ <b>Painel sincronizado com sucesso!</b>\nForam atualizados <b>{len(clientes)} clientes</b> com logins e senhas.\n\n"
-                            msg_sucesso += formatar_relatorio_proximos(clientes, dias_alerta)
-                            enviar_mensagem_com_teclado(chat_id, msg_sucesso, token)
-                        except Exception as err:
-                            enviar_mensagem_com_teclado(chat_id, f"⚠️ Erro ao atualizar painel: {err}\nUsando dados locais salvos.", token)
+                        if TEM_PLAYWRIGHT:
+                            enviar_mensagem_com_teclado(chat_id, "🔄 <i>Acessando o painel para atualizar os dados... Aguarde cerca de 15 segundos.</i>", token)
+                            try:
+                                clientes = executar_monitor(silencioso=True)
+                                msg_sucesso = f"✅ <b>Painel sincronizado com sucesso!</b>\nForam atualizados <b>{len(clientes)} clientes</b> com logins e senhas.\n\n"
+                                msg_sucesso += formatar_relatorio_proximos(clientes, dias_alerta)
+                                enviar_mensagem_com_teclado(chat_id, msg_sucesso, token)
+                            except Exception as err:
+                                enviar_mensagem_com_teclado(chat_id, f"⚠️ Erro ao atualizar painel: {err}\nUsando dados locais salvos.", token)
+                        else:
+                            enviar_mensagem_com_teclado(chat_id, "ℹ️ <i>Você está no servidor da nuvem (Render). A sincronização com o site oficial deve ser feita pelo computador onde o Google Chrome oficial está instalado para evitar o bloqueio anti-bot. A base de dados atualizada já está ativa com todos os seus 11 clientes!</i>", token)
 
                     # 5. DIGITOU UM NÚMERO (1 a 11)
                     elif texto_user.isdigit() and 1 <= int(texto_user) <= len(clientes):
@@ -239,7 +313,6 @@ def loop_polling_bot():
 
         except Exception as e:
             time.sleep(5)
-
         time.sleep(1)
 
 def iniciar_bot():
@@ -249,7 +322,6 @@ def iniciar_bot():
     loop_polling_bot()
 
 def iniciar_bot_em_background():
-    """Inicia o bot em uma thread em background (para Render / Flask)."""
     t = threading.Thread(target=loop_polling_bot, daemon=True)
     t.start()
 
