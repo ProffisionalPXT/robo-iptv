@@ -2,51 +2,38 @@
           BOT DO TELEGRAM - MONITOR DE CLIENTES IPTV (CASSIO)
 ====================================================================
 
-Parabéns! O seu bot do Telegram agora suporta CONSULTA DE SENHAS!
+SISTEMA 100% OPERACIONAL E CONECTADO NA NUVEM (RENDER)!
+URL do Servidor na Nuvem: https://robo-iptv-72ay.onrender.com
 
 --------------------------------------------------------------------
-COMO USAR NO SEU TELEGRAM:
+COMO FUNCIONA O SISTEMA (24 HORAS NO AR):
 --------------------------------------------------------------------
-Abra o seu bot no Telegram: @Iptvpxtplayer_bot
+1. O robô do Telegram (@Iptvpxtplayer_bot) agora roda 24h por dia
+   direto na nuvem do Render.
+   -> Não precisa do seu PC ligado para responder!
 
-Você terá no teclado fixo os seguintes botões:
-
-   ⏳ [ Próximos (5 dias) ]
-      Mostra quem vence nos próximos 5 dias, com valor e WhatsApp.
-
-   📋 [ Todos os Clientes ]
-      Mostra a lista completa de todos os seus clientes ativos (Cassio).
-
-   🔑 [ Ver Login/Senha ]
-      Abre a lista numerada para você consultar o Login e Senha
-      de qualquer cliente.
-
-   🔄 [ Atualizar Painel ]
-      O robô entra no site em segundo plano (invisível), sincroniza
-      tudo (inclusive as senhas) e te envia a lista atualizada!
+2. Você pode consultar do seu celular a qualquer momento:
+   - Toque em [ ⏳ Próximos (5 dias) ] -> Mostra quem está vencendo
+   - Toque em [ 📋 Todos os Clientes ] -> Lista com planos e vencimentos
+   - Toque em [ 🔑 Ver Login/Senha ]   -> Mostra logins e senhas
+   - Ou digite o nome de qualquer cliente no chat (ex: 'Tadeu', 'Fernando')
 
 --------------------------------------------------------------------
-BUSCA RÁPIDA POR NOME NO CHAT:
+COMO ATUALIZAR NOVOS CLIENTES DO PAINEL:
 --------------------------------------------------------------------
-Você pode simplesmente digitar o nome de qualquer cliente no chat:
-- Exemplo 1: Digite 'Fernando'
-  O bot entrega: Usuário, Senha, Vencimento e WhatsApp do Fernando!
-  
-- Exemplo 2: Digite 'Sandra'
-  Se houver mais de uma (ex: Gabrielly Sandra, Mãe de sandra, Sandra igor),
-  o bot lista as opções numeradas para você escolher!
-
---------------------------------------------------------------------
-HORÁRIO DO ALERTA AUTOMÁTICO:
---------------------------------------------------------------------
-- Todo dia às 10:00 da manhã, o bot verifica o painel sozinho
-  e envia o resumo matinal no seu Telegram!
-
---------------------------------------------------------------------
-COMO DEIXAR O BOT RODANDO:
---------------------------------------------------------------------
+Quando você cadastrar novos clientes no painel ou quiser puxar dados:
 - Dê dois cliques em:
-  INICIAR_ROBO_TELEGRAM.bat
+  INICIAR_MONITOR.bat
 
-  Deixe a janelinha minimizada no seu PC.
+- O robô abrirá o Google Chrome oficial invisível, coletará os novos
+  clientes e senhas e enviará AUTOMATICAMENTE para a nuvem em 1 segundo!
+- O seu Telegram na nuvem já passará a responder com os novos dados!
+
+--------------------------------------------------------------------
+UPTIMEROBOT (Para o Render nunca dormir):
+--------------------------------------------------------------------
+Cadastre no UptimeRobot:
+- Tipo: HTTP(s)
+- URL: https://robo-iptv-72ay.onrender.com
+- Intervalo: 5 ou 10 minutos
 ====================================================================
