@@ -1,0 +1,6 @@
+sessao_chrome/
+sessao_navegador/
+__pycache__/
+*.pyc
+debug_*.png
+test_*.py

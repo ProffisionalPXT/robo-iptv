@@ -1,0 +1,52 @@
+====================================================================
+          BOT DO TELEGRAM - MONITOR DE CLIENTES IPTV (CASSIO)
+====================================================================
+
+Parabéns! O seu bot do Telegram agora suporta CONSULTA DE SENHAS!
+
+--------------------------------------------------------------------
+COMO USAR NO SEU TELEGRAM:
+--------------------------------------------------------------------
+Abra o seu bot no Telegram: @Iptvpxtplayer_bot
+
+Você terá no teclado fixo os seguintes botões:
+
+   ⏳ [ Próximos (5 dias) ]
+      Mostra quem vence nos próximos 5 dias, com valor e WhatsApp.
+
+   📋 [ Todos os Clientes ]
+      Mostra a lista completa de todos os seus clientes ativos (Cassio).
+
+   🔑 [ Ver Login/Senha ]
+      Abre a lista numerada para você consultar o Login e Senha
+      de qualquer cliente.
+
+   🔄 [ Atualizar Painel ]
+      O robô entra no site em segundo plano (invisível), sincroniza
+      tudo (inclusive as senhas) e te envia a lista atualizada!
+
+--------------------------------------------------------------------
+BUSCA RÁPIDA POR NOME NO CHAT:
+--------------------------------------------------------------------
+Você pode simplesmente digitar o nome de qualquer cliente no chat:
+- Exemplo 1: Digite 'Fernando'
+  O bot entrega: Usuário, Senha, Vencimento e WhatsApp do Fernando!
+  
+- Exemplo 2: Digite 'Sandra'
+  Se houver mais de uma (ex: Gabrielly Sandra, Mãe de sandra, Sandra igor),
+  o bot lista as opções numeradas para você escolher!
+
+--------------------------------------------------------------------
+HORÁRIO DO ALERTA AUTOMÁTICO:
+--------------------------------------------------------------------
+- Todo dia às 10:00 da manhã, o bot verifica o painel sozinho
+  e envia o resumo matinal no seu Telegram!
+
+--------------------------------------------------------------------
+COMO DEIXAR O BOT RODANDO:
+--------------------------------------------------------------------
+- Dê dois cliques em:
+  INICIAR_ROBO_TELEGRAM.bat
+
+  Deixe a janelinha minimizada no seu PC.
+====================================================================

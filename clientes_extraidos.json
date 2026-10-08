@@ -1,0 +1,112 @@
+[
+  {
+    "id": "7297248",
+    "usuario": "7297248",
+    "nome": "Gabrielly (Sandra)",
+    "vencimento": "06/11/2026, 23:59:59",
+    "status": "Ativo",
+    "plano": "R$ 25,00",
+    "whatsapp": "558187086123",
+    "senha": "4454278"
+  },
+  {
+    "id": "3799143",
+    "usuario": "3799143",
+    "nome": "Mae de sandra",
+    "vencimento": "28/10/2026, 23:59:59",
+    "status": "Ativo",
+    "plano": "R$ 25,00",
+    "whatsapp": "558191498602",
+    "senha": "4454278"
+  },
+  {
+    "id": "5339595",
+    "usuario": "5339595",
+    "nome": "Igor PXT",
+    "vencimento": "23/10/2026, 23:59:59",
+    "status": "Ativo",
+    "plano": "R$ 30,00",
+    "whatsapp": "",
+    "senha": "4454278"
+  },
+  {
+    "id": "0211985",
+    "usuario": "0211985",
+    "nome": "Sandra igor",
+    "vencimento": "21/11/2026, 23:59:59",
+    "status": "Ativo",
+    "plano": "R$ 25,00",
+    "whatsapp": "558187745940",
+    "senha": "4454278"
+  },
+  {
+    "id": "13021997",
+    "usuario": "13021997",
+    "nome": "Joao Barbeiro",
+    "vencimento": "18/11/2026, 23:59:59",
+    "status": "Ativo",
+    "plano": "R$ 25,00",
+    "whatsapp": "558185016403",
+    "senha": "4454278"
+  },
+  {
+    "id": "3466943",
+    "usuario": "3466943",
+    "nome": "Guinho",
+    "vencimento": "01/12/2026, 23:59:59",
+    "status": "Ativo",
+    "plano": "R$ 20,00",
+    "whatsapp": "",
+    "senha": "4454278"
+  },
+  {
+    "id": "02031998",
+    "usuario": "02031998",
+    "nome": "Tadeu",
+    "vencimento": "17/10/2026, 23:59:59",
+    "status": "Ativo",
+    "plano": "R$ 20,00",
+    "whatsapp": "558185127901",
+    "senha": "4454278"
+  },
+  {
+    "id": "8574896",
+    "usuario": "8574896",
+    "nome": "Fernando tio",
+    "vencimento": "15/10/2026, 23:59:59",
+    "status": "Ativo",
+    "plano": "R$ 20,00",
+    "whatsapp": "558199657159",
+    "senha": "4454278"
+  },
+  {
+    "id": "20082016",
+    "usuario": "20082016",
+    "nome": "eu",
+    "vencimento": "24/10/2026, 23:59:59",
+    "status": "Ativo",
+    "plano": "R$ 5,00",
+    "whatsapp": "",
+    "senha": "4454278"
+  },
+  {
+    "id": "8887566",
+    "usuario": "8887566",
+    "nome": "Tita",
+    "vencimento": "27/10/2026, 23:59:59",
+    "status": "Ativo",
+    "plano": "R$ 25,00",
+    "whatsapp": "558185298805",
+    "senha": "4454278"
+  },
+  {
+    "id": "7694007",
+    "usuario": "7694007",
+    "nome": "Izabel",
+    "vencimento": "24/10/2026, 23:59:59",
+    "status": "Ativo",
+    "plano": "R$ 20,00",
+    "whatsapp": "558184752265",
+    "senha": "4454278"
+  }
+]

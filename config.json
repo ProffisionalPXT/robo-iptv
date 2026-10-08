@@ -1,0 +1,17 @@
+{
+  "url_painel": "https://painel.p2player.top",
+  "credenciais": {
+    "usuario": "Cassio",
+    "senha": "G@briel1"
+  },
+  "telegram": {
+    "ativo": true,
+    "bot_token": "8796202587:AAHbaIfkpoRJ67Y39USOJC6SRPDuDP8t9dw",
+    "chat_id": "5960174121"
+  },
+  "configuracoes": {
+    "dias_alerta_proximos": 5,
+    "navegador_visivel": false,
+    "hora_alerta_diario": "10:00"
+  }
+}
