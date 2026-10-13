@@ -162,7 +162,6 @@ def extrair_clientes_completos(page) -> list:
     """Extrai os dados da tabela e visita cada página de edição para extrair as senhas."""
     page.wait_for_timeout(3000)
     
-    # Fecha modais de aviso
     page.evaluate("""() => {
         const modal = document.querySelector('#latestChangesModal, .modal.show');
         if (modal) modal.remove();
@@ -172,7 +171,6 @@ def extrair_clientes_completos(page) -> list:
     page.keyboard.press("Escape")
     page.wait_for_timeout(500)
 
-    # 1. Extrai a lista de clientes da tabela
     clientes_base = page.evaluate("""() => {
         const rows = document.querySelectorAll('tbody tr');
         const result = [];
@@ -232,7 +230,6 @@ def extrair_clientes_completos(page) -> list:
 
     print(f"[EXTRACAO] Encontrados {len(clientes_base)} clientes. Coletando senhas...")
 
-    # 2. Visita telas de edição para pegar a senha
     for i, c in enumerate(clientes_base, start=1):
         href = c.get("editHref")
         if href:
@@ -283,7 +280,7 @@ def sincronizar_com_nuvem(clientes: list):
     except Exception as e:
         print(f"[SYNC ERRO] Falha ao conectar na nuvem: {e}")
 
-def executar_monitor(silencioso: bool = True) -> list:
+def executar_monitor(silencioso: bool = True, notificar_telegram: bool = True) -> list:
     """Executa o processo de consulta do painel com coleta completa de senhas e sync na nuvem."""
     config = carregar_config()
     url_painel = config.get("url_painel", "https://painel.p2player.top")
@@ -334,7 +331,6 @@ def executar_monitor(silencioso: bool = True) -> list:
 
         page.wait_for_timeout(3000)
 
-        # Extrai clientes completos incluindo senhas
         clientes_extraidos = extrair_clientes_completos(page)
         print(f"[SUCESSO] Total de clientes sincronizados localmente: {len(clientes_extraidos)}")
 
@@ -347,7 +343,14 @@ def executar_monitor(silencioso: bool = True) -> list:
     if clientes_extraidos:
         sincronizar_com_nuvem(clientes_extraidos)
 
+        # Se solicitado, envia mensagem de confirmação no Telegram
+        if notificar_telegram and config.get("telegram", {}).get("ativo", False):
+            dias_alerta = config.get("configuracoes", {}).get("dias_alerta_proximos", 5)
+            relatorio = formatar_relatorio_proximos(clientes_extraidos, dias_alerta)
+            msg_inicio = "☀️ <b>PC INICIADO: PAINEL SINCRONIZADO COM SUCESSO!</b>\n\n" + relatorio
+            enviar_mensagem_telegram(msg_inicio)
+
     return clientes_extraidos
 
 if __name__ == "__main__":
-    executar_monitor(silencioso=True)
+    executar_monitor(silencioso=True, notificar_telegram=True)
