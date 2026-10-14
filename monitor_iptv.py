@@ -158,21 +158,61 @@ def tentar_fazer_login(page, usuario, senha):
         print(f"[LOGIN] Erro: {e}")
         return False
 
+def fechar_modais_iniciais(page):
+    try:
+        page.evaluate("""() => {
+            const modal = document.querySelector('#latestChangesModal, .modal.show');
+            if (modal) modal.remove();
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.remove();
+        }""")
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(300)
+    except Exception:
+        pass
+
+def aplicar_filtro_select(page, campo_nome: str, valor_alvo: str) -> bool:
+    try:
+        selects = page.locator(".el-select")
+        count = selects.count()
+        for i in range(count):
+            s = selects.nth(i)
+            txt = s.inner_text()
+            if valor_alvo in txt:
+                print(f"[FILTRO] {campo_nome} já está definido como '{valor_alvo}'")
+                return True
+            if campo_nome in txt:
+                print(f"[FILTRO] Aplicando {campo_nome} -> '{valor_alvo}'...")
+                s.click()
+                page.wait_for_timeout(600)
+                opt = page.locator(f".el-select-dropdown__item:has-text('{valor_alvo}')")
+                if opt.count() > 0:
+                    for j in range(opt.count()):
+                        if opt.nth(j).inner_text().strip() == valor_alvo:
+                            opt.nth(j).click()
+                            page.wait_for_timeout(1000)
+                            return True
+                    opt.first.click()
+                    page.wait_for_timeout(1000)
+                    return True
+    except Exception as e:
+        print(f"[FILTRO ERRO] {campo_nome}: {e}")
+    return False
+
 def extrair_clientes_completos(page) -> list:
-    """Extrai os dados da tabela e visita cada página de edição para extrair as senhas."""
-    page.wait_for_timeout(3000)
-    
-    page.evaluate("""() => {
-        const modal = document.querySelector('#latestChangesModal, .modal.show');
-        if (modal) modal.remove();
-        const backdrop = document.querySelector('.modal-backdrop');
-        if (backdrop) backdrop.remove();
-    }""")
-    page.keyboard.press("Escape")
-    page.wait_for_timeout(500)
+    """Aplica filtros (Teste: Não, Servidor: P2PLAYER), extrai a tabela principal e captura as senhas reais individuais."""
+    page.wait_for_timeout(2000)
+    fechar_modais_iniciais(page)
+
+    # Garante a filtragem idêntica à do usuário no painel
+    aplicar_filtro_select(page, "Teste", "Não")
+    aplicar_filtro_select(page, "Servidor", "P2PLAYER")
+    page.wait_for_timeout(2000)
 
     clientes_base = page.evaluate("""() => {
-        const rows = document.querySelectorAll('tbody tr');
+        const table = document.querySelector('table');
+        if (!table) return [];
+        const rows = table.querySelectorAll('tbody tr');
         const result = [];
         
         rows.forEach(r => {
@@ -183,12 +223,12 @@ def extrair_clientes_completos(page) -> list:
                 const colSituacao = tds[2].innerText.trim();
                 const colDetalhes = tds[3].innerText.trim();
 
-                if (colUsuario.toUpperCase().includes('MAXPLAYER')) return;
-                if (!colUsuario.toUpperCase().includes('P2PLAYER') && !colUsuario.toUpperCase().includes('CASSIO')) return;
-
                 const idMatch = colUsuario.match(/\\b\\d{6,10}\\b/);
                 const id = idMatch ? idMatch[0] : '';
                 if (!id) return;
+
+                // Descarta contas teste de 24h ou com plano de R$ 0,01
+                if (colUsuario.includes('24 Horas') || colDetalhes.includes('0,01')) return;
 
                 const dataMatch = colDatas.match(/\\d{2}\\/\\d{2}\\/\\d{4}(?:,\\s*\\d{2}:\\d{2}:\\d{2})?/);
                 const vencimento = dataMatch ? dataMatch[0] : '';
@@ -228,7 +268,7 @@ def extrair_clientes_completos(page) -> list:
         return result;
     }""")
 
-    print(f"[EXTRACAO] Encontrados {len(clientes_base)} clientes. Coletando senhas...")
+    print(f"[EXTRACAO] Encontrados {len(clientes_base)} clientes reais. Coletando senhas individuais...")
 
     for i, c in enumerate(clientes_base, start=1):
         href = c.get("editHref")
@@ -236,7 +276,9 @@ def extrair_clientes_completos(page) -> list:
             url_edit = f"https://painel.p2player.top/{href.lstrip('/')}"
             try:
                 page.goto(url_edit, wait_until="load", timeout=15000)
-                page.wait_for_timeout(1500)
+                page.reload()
+                page.wait_for_timeout(1800)
+                fechar_modais_iniciais(page)
 
                 senha_val = page.evaluate("""() => {
                     const inp = document.querySelector("input[placeholder*='Deixe em branco'], input[placeholder*='mesmo']");
