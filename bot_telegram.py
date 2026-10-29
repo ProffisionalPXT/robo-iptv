@@ -118,13 +118,7 @@ except Exception:
         linhas.append("\n<i>Toque no Usuário ou na Senha para copiar rapidamente!</i>")
         return "\n".join(linhas)
 
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
-
-def carregar_config():
-    if not os.path.exists(CONFIG_PATH):
-        return {}
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+from telegram_notifier import carregar_config
 
 def carregar_clientes_salvos() -> list:
     if os.path.exists(CLIENTES_JSON):

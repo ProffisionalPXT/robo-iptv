@@ -1,14 +1,14 @@
 {
   "url_painel": "https://painel.p2player.top",
-  "url_nuvem": "https://robo-iptv-72ay.onrender.com",
+  "url_nuvem": "https://seu-app.onrender.com",
   "credenciais": {
-    "usuario": "Cassio",
-    "senha": "G@briel1"
+    "usuario": "SEU_USUARIO",
+    "senha": "SUA_SENHA"
   },
   "telegram": {
     "ativo": true,
-    "bot_token": "8796202587:AAHbaIfkpoRJ67Y39USOJC6SRPDuDP8t9dw",
-    "chat_id": "5960174121"
+    "bot_token": "SEU_BOT_TOKEN_AQUI",
+    "chat_id": "SEU_CHAT_ID_AQUI"
   },
   "configuracoes": {
     "dias_alerta_proximos": 5,

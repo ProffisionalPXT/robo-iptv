@@ -13,10 +13,35 @@ if sys.platform == "win32":
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
 
 def carregar_config():
-    if not os.path.exists(CONFIG_PATH):
-        return {}
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+    cfg = {}
+    if os.path.exists(CONFIG_PATH):
+        try:
+            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+        except Exception:
+            cfg = {}
+
+    # Suporte a variáveis de ambiente (Render / Nuvem)
+    env_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    env_chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    env_url_painel = os.environ.get("URL_PAINEL")
+    env_url_nuvem = os.environ.get("URL_NUVEM")
+
+    if env_token:
+        if "telegram" not in cfg:
+            cfg["telegram"] = {}
+        cfg["telegram"]["bot_token"] = env_token.strip()
+        cfg["telegram"]["ativo"] = True
+    if env_chat_id:
+        if "telegram" not in cfg:
+            cfg["telegram"] = {}
+        cfg["telegram"]["chat_id"] = env_chat_id.strip()
+    if env_url_painel:
+        cfg["url_painel"] = env_url_painel.strip()
+    if env_url_nuvem:
+        cfg["url_nuvem"] = env_url_nuvem.strip()
+
+    return cfg
 
 def enviar_mensagem_telegram(mensagem: str, parse_mode: str = "HTML") -> bool:
     """Envia uma mensagem para o chat do Telegram configurado."""
