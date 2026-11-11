@@ -140,14 +140,19 @@ def buscar_clientes_por_termo(termo: str, clientes: list) -> list:
     if not termo_norm:
         return []
 
+    # Versão sem letras duplicadas (ex: 'gabriely' <-> 'gabrielly', 'walace' <-> 'wallace')
+    termo_dedup = re.sub(r"([a-z])\1+", r"\1", termo_norm)
+
     encontrados = []
     for c in clientes:
         nome_norm = normalizar_texto(c.get("nome", ""))
         user_norm = normalizar_texto(c.get("usuario", ""))
         id_norm = normalizar_texto(c.get("id", ""))
         tel_norm = normalizar_texto(c.get("whatsapp", ""))
+        nome_dedup = re.sub(r"([a-z])\1+", r"\1", nome_norm)
 
         if (termo_norm in nome_norm or 
+            termo_dedup in nome_dedup or
             termo_norm == user_norm or 
             termo_norm == id_norm or 
             (len(termo_norm) >= 4 and termo_norm in tel_norm)):
@@ -226,13 +231,6 @@ def loop_polling_bot():
     print("[STATUS] Bot iniciado e aguardando comandos...\n")
     ultimo_update_id = 0
     url_updates = f"https://api.telegram.org/bot{token}/getUpdates"
-
-    try:
-        resp = requests.get(url_updates, params={"offset": -1}, timeout=10).json()
-        if resp.get("ok") and resp.get("result"):
-            ultimo_update_id = resp["result"][-1]["update_id"]
-    except Exception:
-        pass
 
     while True:
         try:
